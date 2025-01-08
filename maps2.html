@@ -1,0 +1,1654 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/ADMINISTRASIDESA_AR_25K_2.js"></script>
+        <script src="data/Radius_Pemantauan_3.js"></script>
+        <script src="data/Titik_Pemantauan_UTM_4.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-6.3440745526254325,106.61734977578872],[-6.211304579942883,106.79888762947418]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        map.createPane('pane_GoogleSatellite_1');
+        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
+        var layer_GoogleSatellite_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_1',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_1;
+        map.addLayer(layer_GoogleSatellite_1);
+        function pop_ADMINISTRASIDESA_AR_25K_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NAMOBJ</th>\
+                        <td>' + (feature.properties['NAMOBJ'] !== null ? autolinker.link(feature.properties['NAMOBJ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">REMARK</th>\
+                        <td>' + (feature.properties['REMARK'] !== null ? autolinker.link(feature.properties['REMARK'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">SHAPE_Leng</th>\
+                        <td>' + (feature.properties['SHAPE_Leng'] !== null ? autolinker.link(feature.properties['SHAPE_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">SHAPE_Area</th>\
+                        <td>' + (feature.properties['SHAPE_Area'] !== null ? autolinker.link(feature.properties['SHAPE_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ADMINISTRASIDESA_AR_25K_2_0(feature) {
+            switch(String(feature.properties['NAMOBJ'])) {
+                case 'Babakan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,222,80,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Baktijaya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(145,240,147,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bambuapus':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,82,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bendabaru':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(136,28,214,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Bintaro':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,64,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Buaran':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(19,230,72,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cempakaputih':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(34,143,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ciater':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(78,130,234,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cibogo':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,110,189,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cihuni':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,64,234,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cilenggang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,122,145,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cinangka':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(135,173,230,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cinere':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(86,207,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cipadujaya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(199,204,109,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cipayung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,46,126,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Ciputat':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,196,127,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Cireundeu':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(67,169,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jelupang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,201,193,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jombang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(22,207,179,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jurangmangu Barat':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,68,213,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Jurangmangu Timur':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(131,120,200,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kademangan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(91,232,69,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kedaung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(38,44,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Keranggan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,137,128,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kunciran':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(68,104,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Larangan Selatan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,165,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lebakbulus':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(172,231,90,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lengkong Karya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(216,123,129,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lengkong Kulon':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(36,164,219,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lengkong Wetan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(24,16,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lengkonggudang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(98,203,18,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Lengkonggudang Timur':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(102,230,51,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Limo':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(140,47,234,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Muncul':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(202,101,38,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pabuaran':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,234,234,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pakualam':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(182,22,240,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pakulonan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,222,126,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pakulonan Barat':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(172,145,240,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pamulang Barat':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,68,41,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pamulang Timur':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,130,219,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pangkalanjati':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(236,56,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Paninggilan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,71,23,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Panunggangan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(218,132,96,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parigi':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(83,50,214,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parigibaru':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,81,122,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Parungserab':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(56,75,214,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pengasinan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,223,139,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pesanggrahan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(139,97,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Petukangan Selatan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(149,21,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pinang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,165,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pisangan':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,39,39,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondok Jagung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(102,213,137,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokaren':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,191,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokbenda':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(188,214,84,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokbetung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(171,234,138,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokcabeilir':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,188,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokjagung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,82,101,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokjaya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,78,170,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokkacang Barat':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,214,62,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokkacang Timur':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(83,238,75,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokkarya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(93,146,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokpetir':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(127,240,206,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokpinang':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,227,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokpucung':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,231,122,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Pondokranji':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,187,49,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rawabuntu':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(94,114,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rawakalong':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,162,75,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rawamekarjaya':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(97,218,110,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rempoa':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(35,205,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Rengas':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(27,178,205,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sampora':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(23,168,208,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sawah':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,30,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Sawahbaru':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,79,185,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Serpong':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(216,71,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Serua':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(62,220,231,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Seruaindah':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(141,91,207,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Setu':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(177,240,115,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Suradita':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(86,231,50,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Tajur':
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(145,202,39,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(63,202,149,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_ADMINISTRASIDESA_AR_25K_2');
+        map.getPane('pane_ADMINISTRASIDESA_AR_25K_2').style.zIndex = 402;
+        map.getPane('pane_ADMINISTRASIDESA_AR_25K_2').style['mix-blend-mode'] = 'normal';
+        var layer_ADMINISTRASIDESA_AR_25K_2 = new L.geoJson(json_ADMINISTRASIDESA_AR_25K_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ADMINISTRASIDESA_AR_25K_2',
+            layerName: 'layer_ADMINISTRASIDESA_AR_25K_2',
+            pane: 'pane_ADMINISTRASIDESA_AR_25K_2',
+            onEachFeature: pop_ADMINISTRASIDESA_AR_25K_2,
+            style: style_ADMINISTRASIDESA_AR_25K_2_0,
+        });
+        bounds_group.addLayer(layer_ADMINISTRASIDESA_AR_25K_2);
+        map.addLayer(layer_ADMINISTRASIDESA_AR_25K_2);
+        function pop_Radius_Pemantauan_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>NAMOBJ</strong><br />' + (feature.properties['NAMOBJ'] !== null ? autolinker.link(feature.properties['NAMOBJ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">HubDist</th>\
+                        <td>' + (feature.properties['HubDist'] !== null ? autolinker.link(feature.properties['HubDist'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">path</th>\
+                        <td>' + (feature.properties['path'] !== null ? autolinker.link(feature.properties['path'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Suhu</th>\
+                        <td>' + (feature.properties['Suhu'] !== null ? autolinker.link(feature.properties['Suhu'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kelembaban</th>\
+                        <td>' + (feature.properties['Kelembaban'] !== null ? autolinker.link(feature.properties['Kelembaban'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">xcoord</th>\
+                        <td>' + (feature.properties['xcoord'] !== null ? autolinker.link(feature.properties['xcoord'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">ycoord</th>\
+                        <td>' + (feature.properties['ycoord'] !== null ? autolinker.link(feature.properties['ycoord'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="Foto"colspan="2"><strong>Foto</strong><br />' + (feature.properties['Foto'] !== null ? '<img src="images/' + String(feature.properties['Foto']).replace(/[\\\/:]/g, '_').trim() + '">' : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Radius_Pemantauan_3_0(feature) {
+            if (feature.properties['Suhu'] >= -40.000000 && feature.properties['Suhu'] <= -16.000000 ) {
+                return {
+                pane: 'pane_Radius_Pemantauan_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(6,13,96,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Suhu'] >= -16.000000 && feature.properties['Suhu'] <= 16.000000 ) {
+                return {
+                pane: 'pane_Radius_Pemantauan_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(5,166,253,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Suhu'] >= 16.000000 && feature.properties['Suhu'] <= 35.000000 ) {
+                return {
+                pane: 'pane_Radius_Pemantauan_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(21,204,3,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Suhu'] >= 35.000000 && feature.properties['Suhu'] <= 56.000000 ) {
+                return {
+                pane: 'pane_Radius_Pemantauan_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,95,3,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Suhu'] >= 56.000000 && feature.properties['Suhu'] <= 80.000000 ) {
+                return {
+                pane: 'pane_Radius_Pemantauan_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,0,1.0)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_Radius_Pemantauan_3');
+        map.getPane('pane_Radius_Pemantauan_3').style.zIndex = 403;
+        map.getPane('pane_Radius_Pemantauan_3').style['mix-blend-mode'] = 'normal';
+        var layer_Radius_Pemantauan_3 = new L.geoJson(json_Radius_Pemantauan_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Radius_Pemantauan_3',
+            layerName: 'layer_Radius_Pemantauan_3',
+            pane: 'pane_Radius_Pemantauan_3',
+            onEachFeature: pop_Radius_Pemantauan_3,
+            style: style_Radius_Pemantauan_3_0,
+        });
+        bounds_group.addLayer(layer_Radius_Pemantauan_3);
+        map.addLayer(layer_Radius_Pemantauan_3);
+        function pop_Titik_Pemantauan_UTM_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>NAMOBJ</strong><br />' + (feature.properties['NAMOBJ'] !== null ? autolinker.link(feature.properties['NAMOBJ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['xcoord'] !== null ? autolinker.link(feature.properties['xcoord'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ycoord'] !== null ? autolinker.link(feature.properties['ycoord'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Titik_Pemantauan_UTM_4_0() {
+            return {
+                pane: 'pane_Titik_Pemantauan_UTM_4',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,180,60,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_Titik_Pemantauan_UTM_4');
+        map.getPane('pane_Titik_Pemantauan_UTM_4').style.zIndex = 404;
+        map.getPane('pane_Titik_Pemantauan_UTM_4').style['mix-blend-mode'] = 'normal';
+        var layer_Titik_Pemantauan_UTM_4 = new L.geoJson(json_Titik_Pemantauan_UTM_4, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_Titik_Pemantauan_UTM_4',
+            layerName: 'layer_Titik_Pemantauan_UTM_4',
+            pane: 'pane_Titik_Pemantauan_UTM_4',
+            onEachFeature: pop_Titik_Pemantauan_UTM_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Titik_Pemantauan_UTM_4_0(feature));
+            },
+        });
+        var cluster_Titik_Pemantauan_UTM_4 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Titik_Pemantauan_UTM_4.addLayer(layer_Titik_Pemantauan_UTM_4);
+
+        bounds_group.addLayer(layer_Titik_Pemantauan_UTM_4);
+        cluster_Titik_Pemantauan_UTM_4.addTo(map);
+        var overlaysTree = [
+            {label: '<img src="legend/Titik_Pemantauan_UTM_4.png" /> Titik_Pemantauan_UTM', layer: cluster_Titik_Pemantauan_UTM_4},
+            {label: 'Radius_Pemantauan<br /><table><tr><td style="text-align: center;"><img src="legend/Radius_Pemantauan_3_SangatDingin0.png" /></td><td>Sangat Dingin</td></tr><tr><td style="text-align: center;"><img src="legend/Radius_Pemantauan_3_Dingin1.png" /></td><td>Dingin</td></tr><tr><td style="text-align: center;"><img src="legend/Radius_Pemantauan_3_Sedang2.png" /></td><td>Sedang</td></tr><tr><td style="text-align: center;"><img src="legend/Radius_Pemantauan_3_Hangat3.png" /></td><td>Hangat</td></tr><tr><td style="text-align: center;"><img src="legend/Radius_Pemantauan_3_Panas4.png" /></td><td>Panas</td></tr></table>', layer: layer_Radius_Pemantauan_3},
+            {label: 'ADMINISTRASIDESA_AR_25K<br /><table><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Babakan0.png" /></td><td>Babakan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Baktijaya1.png" /></td><td>Baktijaya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Bambuapus2.png" /></td><td>Bambuapus</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Bendabaru3.png" /></td><td>Bendabaru</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Bintaro4.png" /></td><td>Bintaro</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Buaran5.png" /></td><td>Buaran</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cempakaputih6.png" /></td><td>Cempakaputih</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Ciater7.png" /></td><td>Ciater</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cibogo8.png" /></td><td>Cibogo</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cihuni9.png" /></td><td>Cihuni</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cilenggang10.png" /></td><td>Cilenggang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cinangka11.png" /></td><td>Cinangka</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cinere12.png" /></td><td>Cinere</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cipadujaya13.png" /></td><td>Cipadujaya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cipayung14.png" /></td><td>Cipayung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Ciputat15.png" /></td><td>Ciputat</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Cireundeu16.png" /></td><td>Cireundeu</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Jelupang17.png" /></td><td>Jelupang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Jombang18.png" /></td><td>Jombang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_JurangmanguBarat19.png" /></td><td>Jurangmangu Barat</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_JurangmanguTimur20.png" /></td><td>Jurangmangu Timur</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Kademangan21.png" /></td><td>Kademangan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Kedaung22.png" /></td><td>Kedaung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Keranggan23.png" /></td><td>Keranggan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Kunciran24.png" /></td><td>Kunciran</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_LaranganSelatan25.png" /></td><td>Larangan Selatan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Lebakbulus26.png" /></td><td>Lebakbulus</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_LengkongKarya27.png" /></td><td>Lengkong Karya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_LengkongKulon28.png" /></td><td>Lengkong Kulon</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_LengkongWetan29.png" /></td><td>Lengkong Wetan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Lengkonggudang30.png" /></td><td>Lengkonggudang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_LengkonggudangTimur31.png" /></td><td>Lengkonggudang Timur</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Limo32.png" /></td><td>Limo</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Muncul33.png" /></td><td>Muncul</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pabuaran34.png" /></td><td>Pabuaran</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pakualam35.png" /></td><td>Pakualam</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pakulonan36.png" /></td><td>Pakulonan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PakulonanBarat37.png" /></td><td>Pakulonan Barat</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PamulangBarat38.png" /></td><td>Pamulang Barat</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PamulangTimur39.png" /></td><td>Pamulang Timur</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pangkalanjati40.png" /></td><td>Pangkalanjati</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Paninggilan41.png" /></td><td>Paninggilan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Panunggangan42.png" /></td><td>Panunggangan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Parigi43.png" /></td><td>Parigi</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Parigibaru44.png" /></td><td>Parigibaru</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Parungserab45.png" /></td><td>Parungserab</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pengasinan46.png" /></td><td>Pengasinan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pesanggrahan47.png" /></td><td>Pesanggrahan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PetukanganSelatan48.png" /></td><td>Petukangan Selatan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pinang49.png" /></td><td>Pinang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pisangan50.png" /></td><td>Pisangan</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PondokJagung51.png" /></td><td>Pondok Jagung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokaren52.png" /></td><td>Pondokaren</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokbenda53.png" /></td><td>Pondokbenda</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokbetung54.png" /></td><td>Pondokbetung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokcabeilir55.png" /></td><td>Pondokcabeilir</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokjagung56.png" /></td><td>Pondokjagung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokjaya57.png" /></td><td>Pondokjaya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PondokkacangBarat58.png" /></td><td>Pondokkacang Barat</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_PondokkacangTimur59.png" /></td><td>Pondokkacang Timur</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokkarya60.png" /></td><td>Pondokkarya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokpetir61.png" /></td><td>Pondokpetir</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokpinang62.png" /></td><td>Pondokpinang</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokpucung63.png" /></td><td>Pondokpucung</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Pondokranji64.png" /></td><td>Pondokranji</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Rawabuntu65.png" /></td><td>Rawabuntu</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Rawakalong66.png" /></td><td>Rawakalong</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Rawamekarjaya67.png" /></td><td>Rawamekarjaya</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Rempoa68.png" /></td><td>Rempoa</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Rengas69.png" /></td><td>Rengas</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Sampora70.png" /></td><td>Sampora</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Sawah71.png" /></td><td>Sawah</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Sawahbaru72.png" /></td><td>Sawahbaru</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Serpong73.png" /></td><td>Serpong</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Serua74.png" /></td><td>Serua</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Seruaindah75.png" /></td><td>Seruaindah</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Setu76.png" /></td><td>Setu</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Suradita77.png" /></td><td>Suradita</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_Tajur78.png" /></td><td>Tajur</td></tr><tr><td style="text-align: center;"><img src="legend/ADMINISTRASIDESA_AR_25K_2_79.png" /></td><td></td></tr></table>', layer: layer_ADMINISTRASIDESA_AR_25K_2},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_1},
+            {label: "OSM Standard", layer: layer_OSMStandard_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var i = 0;
+        layer_Radius_Pemantauan_3.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Suhu'] !== null?String('<div style="color: #ffffff; font-size: 20pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['Suhu']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Radius_Pemantauan_3'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        map.addControl(new L.Control.Search({
+            layer: cluster_Titik_Pemantauan_UTM_4,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'NAMOBJ'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+        resetLabels([layer_Radius_Pemantauan_3]);
+        map.on("zoomend", function(){
+            resetLabels([layer_Radius_Pemantauan_3]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_Radius_Pemantauan_3]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_Radius_Pemantauan_3]);
+        });
+        </script>
+    </body>
+</html>
